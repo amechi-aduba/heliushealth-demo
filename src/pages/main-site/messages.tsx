@@ -121,21 +121,40 @@ const addButtonStyle: React.CSSProperties = {
   cursor: "pointer",
 };
 
+interface ChatMessage {
+  sender: "user" | "bot";
+  text: string;
+}
+
+interface User {
+  email: string;
+  name: string;
+  phone: string;
+  role: "Student" | "Nurse";
+  specialty: string;
+  status: "Active" | "Inactive";
+  last_active_date: string;
+}
+
 const Messages: React.FC = () => {
-  const [users, setUsers] = useState(() => {
-    const savedUsers = localStorage.getItem("users");
-    return savedUsers ? JSON.parse(savedUsers) : [];
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem("users");
+    return saved ? (JSON.parse(saved) as User[]) : [];
   });
 
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem("chatMessages");
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [messages, setMessages] = useState<Record<string, ChatMessage[]>>(
+    () => {
+      const saved = localStorage.getItem("chatMessages");
+      return saved ? (JSON.parse(saved) as Record<string, ChatMessage[]>) : {};
+    }
+  );
 
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
-  const [messageInput, setMessageInput] = useState("");
-  const [showAddUser, setShowAddUser] = useState(false);
-  const [newUser, setNewUser] = useState({
+  const [messageInput, setMessageInput] = useState<string>("");
+  const [showAddUser, setShowAddUser] = useState<boolean>(false);
+  const [newUser, setNewUser] = useState<
+    Omit<User, "specialty" | "status" | "last_active_date">
+  >({
     email: "",
     name: "",
     phone: "",
@@ -154,28 +173,27 @@ const Messages: React.FC = () => {
       "Critical Care",
       "Public Health",
     ];
-    const fullUser = {
+    const fullUser: User = {
       ...newUser,
       specialty: specialties[Math.floor(Math.random() * specialties.length)],
       status: Math.random() > 0.5 ? "Active" : "Inactive",
       last_active_date: new Date().toISOString(),
     };
-    setUsers([...users, fullUser]);
+    setUsers((prev) => [...prev, fullUser]);
     setNewUser({ email: "", name: "", phone: "", role: "Student" });
     setShowAddUser(false);
-    setSelectedUser(users.length);
+    setSelectedUser(users.length); // select the newly added user
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (selectedUser === null || !messageInput.trim()) return;
     const userEmail = users[selectedUser].email;
-    const newMsg = { sender: "user", text: messageInput.trim() };
-    const updatedMsgs = {
-      ...messages,
-      [userEmail]: [...(messages[userEmail] || []), newMsg],
-    };
-    setMessages(updatedMsgs);
+    const newMsg: ChatMessage = { sender: "user", text: messageInput.trim() };
+    setMessages((prev) => ({
+      ...prev,
+      [userEmail]: [...(prev[userEmail] || []), newMsg],
+    }));
     setMessageInput("");
   };
 
@@ -225,7 +243,7 @@ const Messages: React.FC = () => {
           </form>
 
           <button
-            onClick={() => setShowAddUser(!showAddUser)}
+            onClick={() => setShowAddUser((prev) => !prev)}
             style={{ ...addButtonStyle, marginTop: "15px" }}
           >
             ➕ Add User
@@ -239,7 +257,7 @@ const Messages: React.FC = () => {
                 value={newUser.email}
                 style={inputStyle}
                 onChange={(e) =>
-                  setNewUser({ ...newUser, email: e.target.value })
+                  setNewUser((prev) => ({ ...prev, email: e.target.value }))
                 }
               />
               <input
@@ -248,7 +266,7 @@ const Messages: React.FC = () => {
                 value={newUser.name}
                 style={inputStyle}
                 onChange={(e) =>
-                  setNewUser({ ...newUser, name: e.target.value })
+                  setNewUser((prev) => ({ ...prev, name: e.target.value }))
                 }
               />
               <input
@@ -257,14 +275,17 @@ const Messages: React.FC = () => {
                 value={newUser.phone}
                 style={inputStyle}
                 onChange={(e) =>
-                  setNewUser({ ...newUser, phone: e.target.value })
+                  setNewUser((prev) => ({ ...prev, phone: e.target.value }))
                 }
               />
               <select
                 value={newUser.role}
                 style={inputStyle}
                 onChange={(e) =>
-                  setNewUser({ ...newUser, role: e.target.value })
+                  setNewUser((prev) => ({
+                    ...prev,
+                    role: e.target.value as "Student" | "Nurse",
+                  }))
                 }
               >
                 <option value="Student">Student</option>
@@ -294,7 +315,8 @@ const Messages: React.FC = () => {
                   cursor: "pointer",
                 }}
               >
-                {user.name} ({user.role})<br />
+                {user.name} ({user.role})
+                <br />
                 <span style={{ fontSize: "12px", color: "#777" }}>
                   {user.email}
                 </span>
