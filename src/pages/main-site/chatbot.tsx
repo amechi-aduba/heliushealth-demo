@@ -89,14 +89,15 @@ const Chatbot: React.FC = () => {
       text: "Hello! I’m your assistant. How can I help you today?",
     },
   ]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState<string>("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const newMessages = [...messages, { sender: "user", text: input }];
-    setMessages(newMessages);
+    // Add the user's message
+    setMessages((prev) => [...prev, { sender: "user", text: input }]);
+
     setInput("");
 
     // Simulate bot response

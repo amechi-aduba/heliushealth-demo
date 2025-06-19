@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import React, { useState } from "react";
+import React, { JSX, useState } from "react";
 import LoginPage from "./pages/login/login";
 import CreateAcctPage from "./pages/login/createacct";
 import TermsCond from "./pages/login/termscond";
